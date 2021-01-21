@@ -60,12 +60,24 @@ func (e *Emulator) Runner(t testing.TB, tableDef *dynamodb.CreateTableInput, f f
 	}
 
 	tableDef.TableName = aws.String(tableName)
+
 	if tableDef.ProvisionedThroughput == nil {
 		tableDef.ProvisionedThroughput = &dynamodb.ProvisionedThroughput{
 			ReadCapacityUnits:  aws.Int64(1),
 			WriteCapacityUnits: aws.Int64(1),
 		}
 	}
+
+	for _, gsi := range tableDef.GlobalSecondaryIndexes {
+		if gsi.ProvisionedThroughput != nil {
+			continue
+		}
+		gsi.ProvisionedThroughput = &dynamodb.ProvisionedThroughput{
+			ReadCapacityUnits:  aws.Int64(1),
+			WriteCapacityUnits: aws.Int64(1),
+		}
+	}
+
 	_, err = e.client.CreateTable(tableDef)
 	if err != nil {
 		t.Fatalf("failed to create table: %v", err)

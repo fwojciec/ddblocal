@@ -250,7 +250,12 @@ func TestRunnerCreatesTableCorrectly(t *testing.T) {
 	ok(t, err)
 
 	var recTableName string
-	ddb.Runner(t, &dynamodb.CreateTableInput{}, func(_ dynamodbiface.DynamoDBAPI, tableName string) {
+	tableInput := &dynamodb.CreateTableInput{
+		GlobalSecondaryIndexes: []*dynamodb.GlobalSecondaryIndex{
+			{IndexName: aws.String("GSI")},
+		},
+	}
+	ddb.Runner(t, tableInput, func(_ dynamodbiface.DynamoDBAPI, tableName string) {
 		recTableName = tableName
 	})
 	equals(t, "test_name", recTableName)
@@ -260,6 +265,15 @@ func TestRunnerCreatesTableCorrectly(t *testing.T) {
 		ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
 			ReadCapacityUnits:  aws.Int64(1),
 			WriteCapacityUnits: aws.Int64(1),
+		},
+		GlobalSecondaryIndexes: []*dynamodb.GlobalSecondaryIndex{
+			{
+				IndexName: aws.String("GSI"),
+				ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
+					ReadCapacityUnits:  aws.Int64(1),
+					WriteCapacityUnits: aws.Int64(1),
+				},
+			},
 		},
 	}
 	equals(t, expCreateTableInput, recCreateTableInput)
